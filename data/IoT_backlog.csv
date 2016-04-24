@@ -1,0 +1,21 @@
+Histórias,Código,Dependência,Prioridade,Tempo (sp),Status
+Criar maquete para demonstrar features,M1,,0.9,8,done
+Implementar login com Oauth2,A1,,0.9,10,done
+Implementar Cadastro de pessoas e objetos,C1,A1,0.9,18,done
+Implementar edição/compartilhamento de objetos,C2,C1,0.8,10,backlog
+Exibir resumo do consumo das luzes da casa,F1,A1,0.7,15,working
+Regar o jardim quando terra estiver seca e não for chover,J1,,0.6,25,backlog
+Abrir e fechar portas pelo celular,P1,"C1, A1",0.6,20,backlog
+Reconhecer latido do cachorro e notificar dono,L1,A1,0.4,40,backlog
+Implementar sistema de sensores de movimento,S1,,0.5,30,backlog
+Implementar sistema de sensores de presença,S2,,0.5,35,backlog
+Reconhecer acesso não autorizado e avisa proprietário,F2,"S1, A1",0.6,40,backlog
+Apagar as luzes e eletrodomésticos de cômodos vazios,F3,S2,0.8,25,backlog
+Mostrar todas as funcionalidades da casa e o status do componentes IoT para o usuário,I1,"A1, C1, C2",1,40,backlog
+Autenticação por voz ,R1,"A1, C1",0.5,80,backlog
+Reconhecimento de comandos por voz,R2,R1,0.6,40,backlog
+Ascender lâmpada por presença e luz,L2,S2,0.3,10,backlog
+Desgarga inteligente (economizar água),D2,,0.2,15,working
+Monitorar consumo de água,M1,C1,0.6,15,working
+Diminuir aquecimento/ar condicionado quando não tiver pessoas na casa,U1,S2,0.6,20,backlog
+Prever quando moradores forem chegar na casa e ajustar temperatura da casa,U2,U1,0.5,50,backlog
