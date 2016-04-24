@@ -1,0 +1,9 @@
+{
+  "configuration1": {
+    "test_param": 1
+  },
+
+  "configuration2": {
+    "test_param": 2
+  }
+}

@@ -1,4 +1,4 @@
-Histórias,Código,Dependência,Prioridade,Tempo (sp),Status
+Story,Story Code,Dependendy,Priority,Time (sp),Status
 Criar maquete para demonstrar features,M1,,0.9,8,done
 Implementar login com Oauth2,A1,,0.9,10,done
 Implementar Cadastro de pessoas e objetos,C1,A1,0.9,18,done
