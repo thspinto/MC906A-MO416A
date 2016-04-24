@@ -1,4 +1,4 @@
-id, efficiency (story point / hour), cost ($ / h), available_time (hours in one sprint)
+id,efficiency, cost,available_time
 t1,0.6,50,120
 t2,0.8,90,60
 t3,0.4,30,160
