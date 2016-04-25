@@ -31,13 +31,12 @@ def main():
 
     check_args()
     backlog = parse_csv(sys.argv[1])
-    team_specs = parse_csv(sys.argv[2])
+    teams = parse_csv(sys.argv[2])
     configs = parse_json(sys.argv[3])
 
-    story_selector = StorySelector(configs)
-    story_selector.generate_random_solution(backlog, team_specs)
-    #for config in configs:
-        #execute algorithm with configuration
+    for config in configs:
+        story_selector = StorySelector(configs[config], backlog, teams)
+        story_selector.run();
 
 
 def parse_json(file_name):

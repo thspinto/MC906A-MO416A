@@ -5,14 +5,14 @@ C1,Implementar Cadastro de pessoas e objetos,A1,0.9,18,done
 C2,Implementar edição/compartilhamento de objetos,C1,0.8,10,backlog
 F1,Exibir resumo do consumo das luzes da casa,A1,0.7,15,working
 J1,Regar o jardim quando terra estiver seca e não for chover,,0.6,25,backlog
-P1,Abrir e fechar portas pelo celular,"C1, A1",0.6,20,backlog
+P1,Abrir e fechar portas pelo celular,"C1,A1",0.6,20,backlog
 L1,Reconhecer latido do cachorro e notificar dono,A1,0.4,40,backlog
 S1,Implementar sistema de sensores de movimento,,0.5,30,backlog
 S2,Implementar sistema de sensores de presença,,0.5,35,backlog
-F2,Reconhecer acesso não autorizado e avisa proprietário,"S1, A1",0.6,40,backlog
+F2,Reconhecer acesso não autorizado e avisa proprietário,"S1,A1",0.6,40,backlog
 F3,Apagar as luzes e eletrodomésticos de cômodos vazios,S2,0.8,25,backlog
-I1,Mostrar todas as funcionalidades da casa e o status do componentes IoT para o usuário,"A1, C1, C2",1,40,backlog
-R1,Autenticação por voz ,"A1, C1",0.5,80,backlog
+I1,Mostrar todas as funcionalidades da casa e o status do componentes IoT para o usuário,"A1,C1,C2",1,40,backlog
+R1,Autenticação por voz ,"A1,C1",0.5,80,backlog
 R2,Reconhecimento de comandos por voz,R1,0.6,40,backlog
 L2,Ascender lâmpada por presença e luz,S2,0.3,10,backlog
 D2,Desgarga inteligente (economizar água),,0.2,15,working

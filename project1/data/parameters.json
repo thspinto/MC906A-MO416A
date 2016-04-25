@@ -1,9 +1,9 @@
 {
   "configuration1": {
-    "test_param": 1
+    "population_size": 10
   },
 
   "configuration2": {
-    "test_param": 2
+    "population_size": 20
   }
 }
