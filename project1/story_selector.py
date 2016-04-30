@@ -33,6 +33,7 @@ class StorySelector:
         self.stories = backlog
         self.teams = teams
 
+
     def generate_population(self):
         """
         Creates the starting random population for the GA algorithm.
@@ -41,7 +42,7 @@ class StorySelector:
         """
         self.population = []
 
-        for i in range(0, self.config['population_size']):
+        for i in xrange(0, self.config['population_size']):
             self.population.append(self.generate_random_solution())
 
 
@@ -63,11 +64,12 @@ class StorySelector:
             if teams_available_time[team_id] < self.stories[story_id]['time']:
                 available_teams.remove(team_id)
             else:
-                solution.append((team_id, story_id))
+                solution.append({'team_id': team_id, 'story_id': story_id})
                 teams_available_time[team_id] -= self.stories[story_id]['time']
                 available_stories.remove(story_id)
 
         return solution
+
 
     def available_stories_id(self):
         """
@@ -84,26 +86,30 @@ class StorySelector:
 
         return available_stories
 
+
     def fitness_points(self, solution):
         """
         Calculate the fitness points for the given solution.
 
+        @param solution: a solution from a population
+
         Expression:
         priority * (total implemented story points) / (mean cost * (number of unimplemented dependencies * 4))
 
-        mean cost = sum[for all stories](story points * team efficiency * team cost) / total implemented story points
+        mean cost: sum[for all stories](story points * team efficiency * team cost) / total implemented story points
         unimplemented dependencies: story that has unimplemented dependency and that dependency isn't part o the team's sprint
         """
-        total_sp = sum(map(lambda x: self.stories[x]['time'], map(itemgetter(1),solution)))
-        total_cost = sum(map(lambda x, y: self.stories[y]['time'] \
-            * self.teams[x]['efficiency'] * self.teams[x]['cost'],
-            map(itemgetter(0), solution), \
-            map(itemgetter(1), solution)))
+        total_sp = sum(map(lambda x: self.stories[x['story_id']]['time'], solution))
+        total_cost = sum(map(lambda x, y: self.stories[x['story_id']]['time'] \
+            * self.teams[x['team_id']]['efficiency'] \
+            * self.teams[x['team_id']]['cost'], solution))
         mean_cost = total_cost / total_sp
+
+        excess_hours = self.excess_hours(solution)
 
         invalid_dependencies = 0
         for attribution in solution:
-            story_dependencies = self.stories[attribution[1]]['dependency']
+            story_dependencies = self.stories[attribution['story_id']]['dependency']
             for dependency_id in story_dependencies.split(','):
                 if dependency_id == '':
                     continue
@@ -111,11 +117,35 @@ class StorySelector:
                     invalid_dependencies += 1
                 elif self.stories[dependency_id]['status'] == 'backlog':
                     # See if dependency is in the team's sprint
-                    result = list(filter(lambda x: x[1] == dependency_id, solution))
-                    if len(result) != 1 or result[0][0] != attribution[0]:
+                    result = list(filter(lambda x: x['story_id'] == dependency_id, solution))
+                    if len(result) != 1 or result[0]['team_id'] != attribution['team_id']:
                         invalid_dependencies += 1
 
-        return total_sp / (mean_cost * 4 * invalid_dependencies)
+        return total_sp / (1 + (mean_cost * 4 * invalid_dependencies * excess_hours))
+
+
+    def excess_hours(self, solution):
+        """
+        Get the total excess hours done by the teams
+
+        @param solution: a solution from a population
+        """
+        total_hours = {}
+        for assingment in solution:
+            hours = self.stories[assingment['story_id']]['time'] \
+            * self.teams[assingment['team_id']]['efficiency']
+            if assingment['team_id'] not in total_hours:
+                total_hours[assingment['team_id']] = hours
+            else:
+                total_hours[assingment['team_id']] += hours
+
+        excess_hours = 0
+        for key in total_hours:
+            hours = total_hours[key] - self.teams[key]['available_time']
+            if hours > 0:
+                excess_hours += hours
+
+        return excess_hours
 
 
     def run(self):
@@ -123,3 +153,6 @@ class StorySelector:
         Run genetic algorithm to assign stories to teams
         """
         self.generate_population()
+        print(self.population[0])
+        self.population[0].append({'team_id': 't2', 'story_id': 'U2'})
+        print(self.excess_hours(self.population[0]))
