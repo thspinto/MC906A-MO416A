@@ -60,7 +60,7 @@ def parse_csv(file_name):
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         header = next(reader)
         for row in reader:
-            data[row[0]] = {header[i]:row[i] for i in xrange(1,len(header))}
+            data[row[0]] = {header[i]:row[i] for i in range(1,len(header))}
 
     convert_numbers(data)
     return data

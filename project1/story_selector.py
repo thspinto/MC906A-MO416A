@@ -42,7 +42,7 @@ class StorySelector:
         """
         self.population = []
 
-        for i in xrange(0, self.config['population_size']):
+        for i in range(0, self.config['population_size']):
             self.population.append(self.generate_random_solution())
 
 
@@ -71,7 +71,7 @@ class StorySelector:
         return solution
 
 
-    def available_stories_id(self):
+    def available_stories_id(self, solution=[]):
         """
         Returns the ids of the stories that have backlog status
 
@@ -83,6 +83,8 @@ class StorySelector:
             if self.stories[story_id]['status'] == 'backlog':
                 available_stories.append(story_id)
 
+        for attribution in solution:
+            available_stories.remove(attribution['story_id'])
 
         return available_stories
 
@@ -147,12 +149,41 @@ class StorySelector:
 
         return excess_hours
 
+    def mutation(self, solution):
+        """
+        Mutates the solution.
+
+        There are 3 types of mutation:
+        1. A new attribution (team, story) is created by randomly selecting a
+        team an available story.
+        2. An existing attribution is modified, changing team or the story with
+        equal probability. If the story is changed, it with be exchange with a
+        random available story
+        3. An existing probability is deleted.
+        """
+        rand = random.random()
+        story_id = random.choice(self.available_stories_id(solution))
+        team_id = random.choice(list(self.teams))
+        print(rand)
+        if(rand < 1/3):
+            # Add new attribution
+            solution.append({'team_id': team_id, 'story_id': story_id})
+        elif(rand < 2/3):
+            # Edit an attribuiton
+            attribution = random.choice(solution)
+            if(random.random() < 1/2):
+                # Edit team
+                attribution['team_id'] = team_id
+            else:
+                # Edit story
+                attribution['story_id'] = story_id
+        else:
+            # Remove an attribution
+            del solution[random.randrange(len(solution))]
+
 
     def run(self):
         """
         Run genetic algorithm to assign stories to teams
         """
         self.generate_population()
-        print(self.population[0])
-        self.population[0].append({'team_id': 't2', 'story_id': 'U2'})
-        print(self.excess_hours(self.population[0]))
