@@ -68,7 +68,7 @@ class StorySelector:
                 teams_available_time[team_id] -= self.stories[story_id]['time']
                 available_stories.remove(story_id)
 
-        return solution
+        return {'solution': solution, 'fitness_points': self.fitness_points(solution)}
 
 
     def available_stories_id(self, solution=[]):
@@ -164,7 +164,6 @@ class StorySelector:
         rand = random.random()
         story_id = random.choice(self.available_stories_id(solution))
         team_id = random.choice(list(self.teams))
-        print(rand)
         if(rand < 1/3):
             # Add new attribution
             solution.append({'team_id': team_id, 'story_id': story_id})
@@ -181,6 +180,98 @@ class StorySelector:
             # Remove an attribution
             del solution[random.randrange(len(solution))]
 
+
+    def reproduce(self):
+        """
+        Reproduces the population.
+
+        reproduction_proportion new solutions are created and added to the population.
+
+        @config reproduction_type: the type of reproduction {tournament, roulette}
+        @config reproduction_proportion: percentage of new individuals created
+        considering the population_size
+        """
+        reproduction_proportion = self.config['reproduction_proportion']
+        reproduction_type = self.config['reproduction_type']
+        self.new_population = []
+        for i in range(int(reproduction_proportion * len(self.population))):
+            if reproduction_type == 'tournament':
+                self.tournament_reproduction()
+            elif reproduction_type == 'roulette':
+                fitness_sum = sum(map(lambda x: x['fitness_points'], self.population))
+                self.roulette_reproduction(fitness_sum)
+
+
+    def tournament_reproduction(self):
+        """
+        Reproduction by tournament.
+
+        Two groups of reproduction_group_size solutions are selected randomly,
+        the best fit of each group is selected for reproduction.
+
+        @config reproduction_tournament_size: the size o the reproduction group to find
+        the best fit
+        """
+
+        parentA = random.choice(self.population)
+        parentB = random.choice(self.population)
+        for x in range(self.config['reproduction_tournament_size'] - 1):
+            competitorA = random.choice(self.population)
+            competitorB = random.choice(self.population)
+
+            if(parentA['fitness_points'] < competitorA['fitness_points']):
+                parentA = competitorA
+            if(parentB['fitness_points'] < competitorB['fitness_points']):
+                parentB = competitorB
+
+        self.new_population.append(crossover(parentA, parentB))
+
+    def roulette_reproduction(self, fitness_sum):
+        """
+        Reproduction by roullete.
+
+        Chooses two individuals using the following algorithm.
+
+        @algorithm: Gerenates a random number R between 0 and fitness_sum. Then
+        iterates through the population until the cumulative sum of the fitness_points
+        is more than R. The individual of the iteration that satisfies that condition
+        is the choosen one.
+        """
+
+        r = random.randrange(fitness_sum)
+        accumulator = 0
+        for solution in self.population:
+            accumulator += solution['fitness_points']
+            if accumulator > r:
+                self.new_population.append(crossover(parentA, parentB))
+                break
+
+
+    def crossover(self, solutionA, solutionB):
+        """
+        Creates a new solution, crossingover solutionA and solutionB.
+
+        The crossover algorithm randomly chooses two points on the smallest array,
+        cuts the attributions within those points out of both solutions (A and B)
+        and exchanges them between the two arrays.
+
+        After crossover the new individual might be mutated depending on the probability
+        defined by the configuration mutation_probability.
+
+        @param solutionA, solutionB: the two solutions that will be crossedover
+        @config mutation_probability: the probability of the new individual being mutated
+        """
+
+    def select(self):
+        """
+        Creates a new population selecting the best fit.
+            Let N be the size o the population before reporduction, N + N/4 will be
+        the size of the populaion after reporduction.
+            The bet fit solutions will be selected with two strategies:
+        1. Elitism: 1/10 will be selected by elitism (N/10 best solutions)
+        2. Tournament: 9/10 solutions will be selected by choosing the best from
+        two random solutions.
+        """
 
     def run(self):
         """
