@@ -102,7 +102,7 @@ class StorySelector:
         unimplemented dependencies: story that has unimplemented dependency and that dependency isn't part o the team's sprint
         """
         total_sp = sum(map(lambda x: self.stories[x['story_id']]['time'], solution))
-        total_cost = sum(map(lambda x, y: self.stories[x['story_id']]['time'] \
+        total_cost = sum(map(lambda x: self.stories[x['story_id']]['time'] \
             * self.teams[x['team_id']]['efficiency'] \
             * self.teams[x['team_id']]['cost'], solution))
         mean_cost = total_cost / total_sp
@@ -224,7 +224,8 @@ class StorySelector:
             if(parentB['fitness_points'] < competitorB['fitness_points']):
                 parentB = competitorB
 
-        self.new_population.append(crossover(parentA, parentB))
+        self.new_population.append(self.crossover(parentA, parentB))
+
 
     def roulette_reproduction(self, fitness_sum):
         """
@@ -238,29 +239,63 @@ class StorySelector:
         is the choosen one.
         """
 
-        r = random.randrange(fitness_sum)
+        rA = random.randrange(fitness_sum)
+        rB = random.randrange(fitness_sum)
+
+        parentA = None
+        parentB = None
         accumulator = 0
         for solution in self.population:
             accumulator += solution['fitness_points']
-            if accumulator > r:
-                self.new_population.append(crossover(parentA, parentB))
+            if accumulator > rA and parentA is None:
+                parentA = solution
+            if accumulator > rB and parentB is None:
+                parentB = solution
+            if parentA is not None and parentB is not None:
                 break
 
+        self.new_population.append(self.crossover(parentA, parentB))
 
     def crossover(self, solutionA, solutionB):
         """
         Creates a new solution, crossingover solutionA and solutionB.
 
-        The crossover algorithm randomly chooses two points on the smallest array,
-        cuts the attributions within those points out of both solutions (A and B)
-        and exchanges them between the two arrays.
+        The crossover algorithm randomly chooses crossover_cutpoints on each solution.
+        The attribution between the first and secondo cutpoint (or the end of the array)
+        are switched between the two solutions.
 
         After crossover the new individual might be mutated depending on the probability
         defined by the configuration mutation_probability.
 
         @param solutionA, solutionB: the two solutions that will be crossedover
         @config mutation_probability: the probability of the new individual being mutated
+        @config crossover_cutpoints: number of cutpoints of the crossover. Accepted
+        set {one, two}
         """
+        crossover_cutpoints = self.config['crossover_cutpoints']
+        mutation_probability = self.config['mutation_probability']
+        max_len = max(len(solutionA['solution']), len(solutionB['solution']))
+        cutpoints = [random.randrange(max_len + 1)]
+
+        if(crossover_cutpoints == 'one'):
+            cutpoints.append(max_len + 1)
+        elif(crossover_cutpoints == 'two'):
+            cutpoints.append(random.randrange(max_len + 1))
+
+        cutpoints = sorted(cutpoints)
+        cutB = solutionB['solution'][cutpoints[0]:cutpoints[1]]
+
+        #Copy slutionA
+        new_solution = list(solutionA['solution'])
+        #Insert solutionB's cut in solutionA
+        new_solution[cutpoints[0]:cutpoints[1]] = cutB
+
+        rand = random.random()
+        if(rand < mutation_probability):
+            self.mutation(new_solution)
+
+        return {'solution': new_solution, 'fitness_points': self.fitness_points(new_solution)}
+
 
     def select(self):
         """
@@ -278,3 +313,4 @@ class StorySelector:
         Run genetic algorithm to assign stories to teams
         """
         self.generate_population()
+        self.reproduce()
