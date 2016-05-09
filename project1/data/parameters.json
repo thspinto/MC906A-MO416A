@@ -1,19 +1,61 @@
 {
   "configuration1": {
-    "population_size": 4,
+    "population_size": 100,
     "reproduction_tournament_size": 5,
     "reproduction_proportion": 0.25,
     "reproduction_type": "tournament",
-    "mutation_probability": 0.01,
-    "crossover_cutpoints": "one"
+    "mutation_probability": 0.05,
+    "crossover_cutpoints": "one",
+    "selection_strategy": "elitism"
   },
 
   "configuration2": {
-    "population_size": 10,
+    "population_size": 200,
+    "reproduction_tournament_size": 5,
+    "reproduction_proportion": 0.25,
+    "reproduction_type": "tournament",
+    "mutation_probability": 0.05,
+    "crossover_cutpoints": "one",
+    "selection_strategy": "elitism"
+  },
+
+  "configuration3": {
+    "population_size": 100,
     "reproduction_tournament_size": 5,
     "reproduction_proportion": 0.25,
     "reproduction_type": "roulette",
     "mutation_probability": 0.01,
-    "crossover_cutpoints": "two"
+    "crossover_cutpoints": "one",
+    "selection_strategy": "substitution"
+  },
+
+  "configuration4": {
+    "population_size": 200,
+    "reproduction_tournament_size": 5,
+    "reproduction_proportion": 0.25,
+    "reproduction_type": "roulette",
+    "mutation_probability": 0.01,
+    "crossover_cutpoints": "one",
+    "selection_strategy": "substitution"
+  },
+
+  "configuration5": {
+    "population_size": 100,
+    "reproduction_tournament_size": 5,
+    "reproduction_proportion": 0.25,
+    "reproduction_type": "roulette",
+    "mutation_probability": 0.05,
+    "crossover_cutpoints": "one",
+    "selection_strategy": "elitism"
+  },
+
+  "configuration6": {
+    "population_size": 200,
+    "reproduction_tournament_size": 5,
+    "reproduction_proportion": 0.25,
+    "reproduction_type": "roulette",
+    "mutation_probability": 0.05,
+    "crossover_cutpoints": "one",
+    "selection_strategy": "elitism"
   }
 }

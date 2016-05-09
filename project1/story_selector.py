@@ -73,9 +73,10 @@ class StorySelector:
 
     def available_stories_id(self, solution=[]):
         """
-        Returns the ids of the stories that have backlog status
+        Returns the ids of the stories that have backlog status, and are not
+        assined to any team on @param solution
 
-        @param stories: the project stories
+        @param solution: the story assignmet to each team
         """
         available_stories = []
 
@@ -84,7 +85,8 @@ class StorySelector:
                 available_stories.append(story_id)
 
         for attribution in solution:
-            available_stories.remove(attribution['story_id'])
+            if attribution['story_id'] in available_stories:
+                available_stories.remove(attribution['story_id'])
 
         return available_stories
 
@@ -239,8 +241,8 @@ class StorySelector:
         is the choosen one.
         """
 
-        rA = random.randrange(fitness_sum)
-        rB = random.randrange(fitness_sum)
+        rA = random.randrange(int(fitness_sum))
+        rB = random.randrange(int(fitness_sum))
 
         parentA = None
         parentB = None
@@ -294,23 +296,90 @@ class StorySelector:
         if(rand < mutation_probability):
             self.mutation(new_solution)
 
+        self.remove_duplicate_stories(new_solution)
+
         return {'solution': new_solution, 'fitness_points': self.fitness_points(new_solution)}
 
+    def remove_duplicate_stories(self, solution):
+        """
+        Removes repeated assignments in solution.
+
+        @param solution: the solution to be cleaned
+        """
+        stories = []
+        for assignment in solution:
+            if assignment['story_id'] not in stories:
+                stories.append(assignment['story_id'])
+            else:
+                solution.remove(assignment)
 
     def select(self):
         """
-        Creates a new population selecting the best fit.
-            Let N be the size o the population before reporduction, N + N/4 will be
-        the size of the populaion after reporduction.
-            The bet fit solutions will be selected with two strategies:
-        1. Elitism: 1/10 will be selected by elitism (N/10 best solutions)
-        2. Tournament: 9/10 solutions will be selected by choosing the best from
-        two random solutions.
+        Creates a new population merging the new solutions.
+
+        @config selection_strategy: The strategy to create the new population.
+        Accepted set {elitism, substitution}
         """
+        selection_strategy = self.config['selection_strategy']
+
+        if selection_strategy == 'elitism':
+            self.elitism_select()
+        elif selection_strategy == 'substitution':
+            self.substitution_select()
+
+    def elitism_select(self):
+        """
+        Creates the new population using the following algorithm.
+
+        @algorithm Elitism: the new populations will be composed by all the new
+        solutions plus 1/10 best fit of the old generation. The solutions will
+        be chosen by tournament between 2 random solutions of the old population.
+        """
+        elitism_size = int(len(self.population) / 5)
+        new_population = sorted(self.population, \
+            key=lambda x: x['fitness_points'], reverse=True)[:elitism_size]
+        new_population.extend(self.new_population)
+
+        for i in range(len(self.population) - len(new_population)):
+            solutionA = random.choice(self.population)
+            solutionB = random.choice(self.population)
+
+            if solutionA['fitness_points'] > solutionB['fitness_points']:
+                new_population.append(solutionA)
+            else:
+                new_population.append(solutionB)
+
+        self.population = new_population
+
+
+    def substitution_select(self):
+        """
+        Creates the new population using the following algorithm.
+
+        @algorithm Substitution: The N wost solutions will be substituted by the
+        new solutions.
+        """
+        new_population = sorted(self.population, \
+            key=lambda x: x['fitness_points'])
+
+        new_population[:len(self.new_population)] = self.new_population
+        self.population = new_population
+
 
     def run(self):
         """
         Run genetic algorithm to assign stories to teams
         """
+
         self.generate_population()
-        self.reproduce()
+        print('-----------Init--------------')
+        print(self.config)
+
+        for i in range(100):
+            self.reproduce()
+            self.select()
+
+        print(sorted(self.population, \
+            key=lambda x: x['fitness_points'])[0])
+        print(sorted(self.population, \
+            key=lambda x: x['fitness_points'])[-1])
