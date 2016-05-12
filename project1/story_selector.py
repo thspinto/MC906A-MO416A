@@ -53,20 +53,14 @@ class StorySelector:
         doesn't fit in the selected team's sprint.
         """
         available_stories = self.available_stories_id()
-        available_teams = list(self.teams.keys());
-        teams_available_time = {key: self.teams[key]['available_time'] for key in self.teams}
         solution = []
 
-        while len(available_stories) > 0 and len(available_teams) > 0:
+        while len(available_stories) > 0:
             story_id = random.choice(available_stories)
-            team_id = random.choice(available_teams)
+            team_id = random.choice(list(self.teams.keys()))
 
-            if teams_available_time[team_id] < self.stories[story_id]['time']:
-                available_teams.remove(team_id)
-            else:
-                solution.append({'team_id': team_id, 'story_id': story_id})
-                teams_available_time[team_id] -= self.stories[story_id]['time']
-                available_stories.remove(story_id)
+            solution.append({'team_id': team_id, 'story_id': story_id})
+            available_stories.remove(story_id)
 
         return {'solution': solution, 'fitness_points': self.fitness_points(solution)}
 
@@ -103,6 +97,9 @@ class StorySelector:
         mean cost: sum[for all stories](story points * team efficiency * team cost) / total implemented story points
         unimplemented dependencies: story that has unimplemented dependency and that dependency isn't part o the team's sprint
         """
+        if(len(solution) == 0):
+            return 0
+
         total_sp = sum(map(lambda x: self.stories[x['story_id']]['time'], solution))
         total_cost = sum(map(lambda x: self.stories[x['story_id']]['time'] \
             * self.teams[x['team_id']]['efficiency'] \
@@ -163,9 +160,14 @@ class StorySelector:
         random available story
         3. An existing probability is deleted.
         """
-        rand = random.random()
-        story_id = random.choice(self.available_stories_id(solution))
-        team_id = random.choice(list(self.teams))
+
+        available_stories = self.available_stories_id(solution)
+        if(len(available_stories) == 0):
+            rand = 1
+        else:
+            rand = random.random()
+            story_id = random.choice(available_stories)
+            team_id = random.choice(list(self.teams))
         if(rand < 1/3):
             # Add new attribution
             solution.append({'team_id': team_id, 'story_id': story_id})
@@ -190,18 +192,33 @@ class StorySelector:
         reproduction_proportion new solutions are created and added to the population.
 
         @config reproduction_type: the type of reproduction {tournament, roulette}
-        @config reproduction_proportion: percentage of new individuals created
-        considering the population_size
         """
-        reproduction_proportion = self.config['reproduction_proportion']
         reproduction_type = self.config['reproduction_type']
         self.new_population = []
-        for i in range(int(reproduction_proportion * len(self.population))):
+        for i in range(len(self.population)):
             if reproduction_type == 'tournament':
                 self.tournament_reproduction()
             elif reproduction_type == 'roulette':
                 fitness_sum = sum(map(lambda x: x['fitness_points'], self.population))
                 self.roulette_reproduction(fitness_sum)
+            elif reproduction_type == 'none':
+                self.mutation_reproduction(self.population[i])
+
+
+    def mutation_reproduction(self, solution):
+        """
+        Just copy and mutate individuals.
+
+        @param solution: the solution to be copied and maybe mutated
+        """
+        mutation_probability = self.config['mutation_probability']
+        new_solution = list(solution['solution'])
+        rand = random.random()
+        if(rand < mutation_probability):
+            self.mutation(new_solution)
+        self.new_population.append({'solution': new_solution, \
+            'fitness_points': self.fitness_points(new_solution)})
+
 
 
     def tournament_reproduction(self):
@@ -271,18 +288,11 @@ class StorySelector:
 
         @param solutionA, solutionB: the two solutions that will be crossedover
         @config mutation_probability: the probability of the new individual being mutated
-        @config crossover_cutpoints: number of cutpoints of the crossover. Accepted
-        set {one, two}
         """
-        crossover_cutpoints = self.config['crossover_cutpoints']
         mutation_probability = self.config['mutation_probability']
         max_len = max(len(solutionA['solution']), len(solutionB['solution']))
         cutpoints = [random.randrange(max_len + 1)]
-
-        if(crossover_cutpoints == 'one'):
-            cutpoints.append(max_len + 1)
-        elif(crossover_cutpoints == 'two'):
-            cutpoints.append(random.randrange(max_len + 1))
+        cutpoints.append(cutpoints[0] + 1)
 
         cutpoints = sorted(cutpoints)
         cutB = solutionB['solution'][cutpoints[0]:cutpoints[1]]
@@ -324,45 +334,38 @@ class StorySelector:
 
         if selection_strategy == 'elitism':
             self.elitism_select()
-        elif selection_strategy == 'substitution':
-            self.substitution_select()
+        elif selection_strategy == 'steadyState':
+            self.steady_state()
 
     def elitism_select(self):
         """
         Creates the new population using the following algorithm.
 
-        @algorithm Elitism: the new populations will be composed by all the new
-        solutions plus 1/10 best fit of the old generation. The solutions will
-        be chosen by tournament between 2 random solutions of the old population.
+        @algorithm Elitism: the new populations will be composed by 9/10 the best
+        new solutions plus 1/10 best fit of the old generation.
         """
-        elitism_size = int(len(self.population) / 5)
+        elitism_size = int(len(self.population) / 10)
         new_population = sorted(self.population, \
             key=lambda x: x['fitness_points'], reverse=True)[:elitism_size]
-        new_population.extend(self.new_population)
-
-        for i in range(len(self.population) - len(new_population)):
-            solutionA = random.choice(self.population)
-            solutionB = random.choice(self.population)
-
-            if solutionA['fitness_points'] > solutionB['fitness_points']:
-                new_population.append(solutionA)
-            else:
-                new_population.append(solutionB)
+        new_population.extend(sorted(self.new_population, \
+            key=lambda x: x['fitness_points'])[elitism_size:])
 
         self.population = new_population
 
 
-    def substitution_select(self):
+    def steady_state(self):
         """
         Creates the new population using the following algorithm.
 
         @algorithm Substitution: The N wost solutions will be substituted by the
         new solutions.
         """
-        new_population = sorted(self.population, \
-            key=lambda x: x['fitness_points'])
+        ss_size = int(len(self.population) / 10)
+        new_population = sorted(self.new_population, \
+            key=lambda x: x['fitness_points'], reverse=True)[:ss_size]
+        new_population.extend(sorted(self.population, \
+            key=lambda x: x['fitness_points'])[ss_size:])
 
-        new_population[:len(self.new_population)] = self.new_population
         self.population = new_population
 
 
@@ -379,7 +382,11 @@ class StorySelector:
             self.reproduce()
             self.select()
 
-        print(sorted(self.population, \
-            key=lambda x: x['fitness_points'])[0])
-        print(sorted(self.population, \
-            key=lambda x: x['fitness_points'])[-1])
+            sorted_population = sorted(self.population, \
+                key=lambda x: x['fitness_points'])
+            print(sorted_population[0]['fitness_points'])
+            print(sorted_population[-1]['fitness_points'])
+            print((sorted_population[0]['fitness_points'] + \
+                    sorted_population[-1]['fitness_points']) / 2 )
+        #print(sum(map(lambda x: x['fitness_points'], self.population))/len(self.population))
+            print("============")
