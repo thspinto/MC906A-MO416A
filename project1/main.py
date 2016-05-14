@@ -35,7 +35,7 @@ def main():
     configs = parse_json(sys.argv[3])
 
     for config in configs:
-        story_selector = StorySelector(configs[config], backlog, teams)
+        story_selector = StorySelector(configs[config], backlog, teams, config)
         story_selector.run();
 
 

@@ -22,17 +22,19 @@ class StorySelector:
         - team cost (in $ per hour)
     """
 
-    def __init__(self, config,  backlog, teams):
+    def __init__(self, config,  backlog, teams, config_name):
         """
         Initialize global data structures
 
         @param config: algorithm configuration parameters
+        @param config_name: name of the configuration
         @param backlog: the project stories
         @param teams: the team to receive stories to implement on next sprint
         """
         self.config = config
         self.stories = backlog
         self.teams = teams
+        self.config_name = config_name
 
 
     def generate_population(self):
@@ -244,7 +246,7 @@ class StorySelector:
             if(parentB['fitness_points'] < competitorB['fitness_points']):
                 parentB = competitorB
 
-        self.new_population.append(self.crossover(parentA, parentB))
+        self.new_population.extend(self.crossover(parentA, parentB))
 
 
     def roulette_reproduction(self, fitness_sum):
@@ -274,15 +276,14 @@ class StorySelector:
             if parentA is not None and parentB is not None:
                 break
 
-        self.new_population.append(self.crossover(parentA, parentB))
+        self.new_population.extend(self.crossover(parentA, parentB))
 
     def crossover(self, solutionA, solutionB):
         """
         Creates a new solution, crossingover solutionA and solutionB.
 
-        The crossover algorithm randomly chooses crossover_cutpoints on each solution.
-        The attribution between the first and secondo cutpoint (or the end of the array)
-        are switched between the two solutions.
+        The crossover algorithm randomly chooses a cutpoint on each solution.
+        The attribution on that position is switched between the two solutions.
 
         After crossover the new individual might be mutated depending on the probability
         defined by the configuration mutation_probability.
@@ -296,20 +297,32 @@ class StorySelector:
         cutpoints.append(cutpoints[0] + 1)
 
         cutpoints = sorted(cutpoints)
+        cutA = solutionA['solution'][cutpoints[0]:cutpoints[1]]
         cutB = solutionB['solution'][cutpoints[0]:cutpoints[1]]
 
         #Copy slutionA
-        new_solution = list(solutionA['solution'])
+        new_solutionA = list(solutionA['solution'])
         #Insert solutionB's cut in solutionA
-        new_solution[cutpoints[0]:cutpoints[1]] = cutB
+        new_solutionA[cutpoints[0]:cutpoints[1]] = cutB
+
+        #Copy slutionB
+        new_solutionB = list(solutionB['solution'])
+        #Insert solutionA's cut in solutionB
+        new_solutionB[cutpoints[0]:cutpoints[1]] = cutA
 
         rand = random.random()
         if(rand < mutation_probability):
-            self.mutation(new_solution)
+            self.mutation(new_solutionA)
+        rand = random.random()
+        if(rand < mutation_probability):
+            self.mutation(new_solutionB)
 
-        self.remove_duplicate_stories(new_solution)
+        self.remove_duplicate_stories(new_solutionA)
+        self.remove_duplicate_stories(new_solutionB)
 
-        return {'solution': new_solution, 'fitness_points': self.fitness_points(new_solution)}
+
+        return [{'solution': new_solutionA, 'fitness_points': self.fitness_points(new_solutionA)}, \
+            {'solution': new_solutionB, 'fitness_points': self.fitness_points(new_solutionB)}]
 
     def remove_duplicate_stories(self, solution):
         """
@@ -385,7 +398,8 @@ class StorySelector:
         print(self.config)
 
         fitness = []
-        for i in range(100):
+        best = 0
+        for i in range(3000):
             self.reproduce()
             self.select()
 
@@ -397,9 +411,10 @@ class StorySelector:
                     sorted_population[-1]['fitness_points']) / 2
             fitness.append((best, worst, mean))
 
-        self.plot(fitness)
+        print(best)
+        self.plot(fitness, best)
 
-    def plot(self, fitness):
+    def plot(self, fitness, best):
         lines = plt.plot(fitness)
         plt.setp(lines, linewidth=2.0)
         plt.xlabel('Iteração')
@@ -409,4 +424,5 @@ class StorySelector:
         plt.setp(lines[1], marker='None')
         plt.setp(lines[2], marker='None')
         plt.legend(lines, ['Melhor solução', 'Pior solução', 'Média'], loc=4)
-        plt.show()
+        plt.savefig('images/' + self.config_name + '_' + str(best) + '.png')
+        plt.clf()

@@ -1,10 +1,4 @@
 {
-  "configuration1": {
-    "population_size": 1000,
-    "reproduction_type": "none",
-    "mutation_probability": 0.01,
-    "selection_strategy": "elitism"
-  },
   "configuration1.2": {
     "population_size": 1000,
     "reproduction_type": "none",
@@ -14,7 +8,7 @@
   "configuration2.1": {
     "population_size": 1000,
     "reproduction_type": "none",
-    "mutation_probability": 0.01,
+    "mutation_probability": 0.1,
     "selection_strategy": "steadyState"
   },
   "configuration2.2": {
@@ -26,7 +20,7 @@
   "configuration3.1": {
     "population_size": 100,
     "reproduction_type": "none",
-    "mutation_probability": 0.01,
+    "mutation_probability": 0.1,
     "selection_strategy": "steadyState"
   },
   "configuration3.2": {
@@ -34,5 +28,12 @@
     "reproduction_type": "none",
     "mutation_probability": 0.8,
     "selection_strategy": "steadyState"
+  },
+  "configuration4": {
+    "population_size": 1000,
+    "reproduction_type": "tournament",
+    "mutation_probability": 0.1,
+    "selection_strategy": "steadyState",
+    "reproduction_tournament_size": 5
   }
 }
