@@ -7,6 +7,7 @@ __author__ = "Thiago Pinto"
 
 import random
 from operator import itemgetter
+import matplotlib.pyplot as plt
 
 
 class StorySelector:
@@ -361,12 +362,17 @@ class StorySelector:
         new solutions.
         """
         ss_size = int(len(self.population) / 10)
-        new_population = sorted(self.new_population, \
-            key=lambda x: x['fitness_points'], reverse=True)[:ss_size]
-        new_population.extend(sorted(self.population, \
-            key=lambda x: x['fitness_points'])[ss_size:])
 
-        self.population = new_population
+        self.population = sorted(self.population, \
+            key=lambda x: x['fitness_points'])
+        new_population = sorted(self.new_population, \
+            key=lambda x: x['fitness_points'], reverse=True)
+
+        for i in range(ss_size):
+            if self.population[i]['fitness_points'] < new_population[i]['fitness_points']:
+                self.population[i] = new_population[i]
+            else:
+                break
 
 
     def run(self):
@@ -378,15 +384,29 @@ class StorySelector:
         print('-----------Init--------------')
         print(self.config)
 
+        fitness = []
         for i in range(100):
             self.reproduce()
             self.select()
 
             sorted_population = sorted(self.population, \
                 key=lambda x: x['fitness_points'])
-            print(sorted_population[0]['fitness_points'])
-            print(sorted_population[-1]['fitness_points'])
-            print((sorted_population[0]['fitness_points'] + \
-                    sorted_population[-1]['fitness_points']) / 2 )
-        #print(sum(map(lambda x: x['fitness_points'], self.population))/len(self.population))
-            print("============")
+            worst = sorted_population[0]['fitness_points']
+            best = sorted_population[-1]['fitness_points']
+            mean = (sorted_population[0]['fitness_points'] + \
+                    sorted_population[-1]['fitness_points']) / 2
+            fitness.append((best, worst, mean))
+
+        self.plot(fitness)
+
+    def plot(self, fitness):
+        lines = plt.plot(fitness)
+        plt.setp(lines, linewidth=2.0)
+        plt.xlabel('Iteração')
+        plt.ylabel('Fitness')
+        plt.title('Melhor, pior e fitness médio da população')
+        plt.setp(lines[0], marker='None')
+        plt.setp(lines[1], marker='None')
+        plt.setp(lines[2], marker='None')
+        plt.legend(lines, ['Melhor solução', 'Pior solução', 'Média'], loc=4)
+        plt.show()
