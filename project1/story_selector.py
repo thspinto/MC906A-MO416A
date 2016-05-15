@@ -55,15 +55,12 @@ class StorySelector:
         Each team will be assigned a random story until the randomly selected story
         doesn't fit in the selected team's sprint.
         """
-        available_stories = self.available_stories_id()
         solution = []
-
-        while len(available_stories) > 0:
-            story_id = random.choice(available_stories)
+        available_stories = self.available_stories_id()
+        for story_id in available_stories:
             team_id = random.choice(list(self.teams.keys()))
 
             solution.append({'team_id': team_id, 'story_id': story_id})
-            available_stories.remove(story_id)
 
         return {'solution': solution, 'fitness_points': self.fitness_points(solution)}
 
@@ -137,7 +134,7 @@ class StorySelector:
         total_hours = {}
         for assingment in solution:
             hours = self.stories[assingment['story_id']]['time'] \
-            * self.teams[assingment['team_id']]['efficiency']
+            / self.teams[assingment['team_id']]['efficiency']
             if assingment['team_id'] not in total_hours:
                 total_hours[assingment['team_id']] = hours
             else:
@@ -219,6 +216,7 @@ class StorySelector:
         rand = random.random()
         if(rand < mutation_probability):
             self.mutation(new_solution)
+
         self.new_population.append({'solution': new_solution, \
             'fitness_points': self.fitness_points(new_solution)})
 
@@ -317,25 +315,27 @@ class StorySelector:
         if(rand < mutation_probability):
             self.mutation(new_solutionB)
 
-        self.remove_duplicate_stories(new_solutionA)
-        self.remove_duplicate_stories(new_solutionB)
-
-
         return [{'solution': new_solutionA, 'fitness_points': self.fitness_points(new_solutionA)}, \
             {'solution': new_solutionB, 'fitness_points': self.fitness_points(new_solutionB)}]
 
-    def remove_duplicate_stories(self, solution):
+    def remove_duplicate_stories(self):
         """
         Removes repeated assignments in solution.
 
         @param solution: the solution to be cleaned
         """
-        stories = []
-        for assignment in solution:
-            if assignment['story_id'] not in stories:
-                stories.append(assignment['story_id'])
-            else:
-                solution.remove(assignment)
+        unique_pop = []
+        for ind in self.new_population:
+            stories = []
+            unique_solution = []
+            for assignment in ind['solution']:
+                if assignment['story_id'] not in stories:
+                    stories.append(assignment['story_id'])
+                    unique_solution.append(assignment)
+            unique_pop.append({'solution': unique_solution, 'fitness_points': self.fitness_points(unique_solution)})
+
+        self.new_population = unique_pop
+
 
     def select(self):
         """
@@ -345,6 +345,8 @@ class StorySelector:
         Accepted set {elitism, substitution}
         """
         selection_strategy = self.config['selection_strategy']
+        self.remove_duplicate_stories()
+
 
         if selection_strategy == 'elitism':
             self.elitism_select()
@@ -399,7 +401,7 @@ class StorySelector:
 
         fitness = []
         best = 0
-        for i in range(3000):
+        for i in range(100):
             self.reproduce()
             self.select()
 
@@ -412,6 +414,7 @@ class StorySelector:
             fitness.append((best, worst, mean))
 
         print(best)
+        print(sorted_population[-1]['solution'])
         self.plot(fitness, best)
 
     def plot(self, fitness, best):
