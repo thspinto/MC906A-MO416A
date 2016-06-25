@@ -92,7 +92,7 @@ class Robot(object):
                                                  vrep.simx_opmode_streaming)
 
     def initialize_pose(self):
-        self.set_joint_angles([0, 0, 0, 0, 0, 0, 0, 0, 0])
+        self.set_joint_angles([2, 2, 0, 0, 0, 0, 0, 0, 0])
         self.proceed_simulation(10)
 
 

@@ -17,77 +17,75 @@ class Agent(object):
     def __init__(self, robot, alpha=0.1, gamma=0.9, epsilon=0.05, q_init=1):
         self.robot = robot  # TODO definir discretizacao
         # Quantidade de angulos após discretizacao para cada junta
-        self.num_actions_vec = []
-
-        self.num_actions_vec[0] = 3
-        self.num_actions_vec[1] = 3
-        self.num_actions_vec[2] = 3
-
-
-        self.num_actions_vec[3] = 3
-        self.num_actions_vec[4] = 3
-        self.num_actions_vec[5] = 3
-        self.num_actions_vec[6] = 3
-        self.num_actions_vec[7] = 3
-        self.num_actions_vec[8] = 3
+        self.num_actions_vec = [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3
+        ]
 
         # Total de acoes eh igual ao total de combinacoes entre angulos
         self.num_actions = self.num_actions_vec[0]
-        for i in range(7):
-            self.num_actions *= self.num_actions_vec[i + 1]
+        for i in range(1, 8):
+            self.num_actions *= self.num_actions_vec[i]
 
         # TODO validar (http://doc.aldebaran.com/1-14/family/nao_h25/joints_h25.html)
         # Intervalos para serem discretizados
-        self.angles_0 = np.linspace(-2.0857, 2.0857, self.num_actions_0)
-        self.angles_1 = np.linspace(-2.0857, 2.0857, self.num_actions_1)
-        self.angles_2 = np.linspace(-1.535889, 0.484090, self.num_actions_2)
-        self.angles_3 = np.linspace(-1.535889, 0.484090, self.num_actions_3)
-        self.angles_4 = np.linspace(-0.092346, 2.112528, self.num_actions_4)
-        self.angles_5 = np.linspace(-0.092346, 2.112528, self.num_actions_5)
-        self.angles_6 = np.linspace(-1.189516, 0.922747, self.num_actions_6)
-        self.angles_7 = np.linspace(-1.189516, 0.922747, self.num_actions_7)
-        self.angles_8 = np.linspace(-1.145303, 0.740810, self.num_actions_8)
+
+        #braços
+        self.angles_0 = np.linspace(1, 2, self.num_actions_vec[0])
+        self.angles_1 = np.linspace(1, 2, self.num_actions_vec[1])
+
+        #quadril
+        self.angles_2 = np.linspace(-.5, .5, self.num_actions_vec[2])
+        self.angles_3 = np.linspace(-.5, .5, self.num_actions_vec[3])
+
+        self.angles_4 = np.linspace(0, .5, self.num_actions_vec[4])
+        self.angles_5 = np.linspace(0, .5, self.num_actions_vec[5])
+        self.angles_6 = np.linspace(-.5, 0, self.num_actions_vec[6])
+        self.angles_7 = np.linspace(-.5, 0, self.num_actions_vec[7])
+        self.angles_8 = np.linspace(-.1, 0.1, self.num_actions_vec[8])
 
         # TODO Eita, nao sei o que isso faz nao...
         # look-up table from action to angles
-        self.angles_lut = np.array(np.meshgrid(self.angles_1, self.angles_0,
-                                               indexing='ij')).reshape(2,
-                                                                       -1).T  # O numero de estados pode ser diferente do numero de acoes porque
+        self.angles_lut = np.array(np.meshgrid(self.angles_0, self.angles_1,
+                                               self.angles_2,
+                                               self.angles_3,
+                                               self.angles_4,
+                                               self.angles_5, self.angles_6, self.angles_7, self.angles_8,
+                                               indexing='ij')).reshape(9, -1).T
+
+        # O numero de estados pode ser diferente do numero de acoes porque
         # estamos usando o metodo simxSetTargetPosition, que se nao conseguir
         # ir ate o angulo desejado para no meio do caminho. Nao sei se eh
         # importante no nosso caso
-        self.num_states_vec = []
-        self.num_states_vec[0] = 3
-        self.num_states_vec[1] = 3
-        self.num_states_vec[2] = 3
-        self.num_states_vec[3] = 3
-        self.num_states_vec[4] = 3
-        self.num_states_vec[5] = 3
-        self.num_states_vec[6] = 3
-        self.num_states_vec[7] = 3
-        self.num_states_vec[8] = 3
+        self.num_states_vec = self.num_actions_vec[:]
 
         # Total de acoes eh igual ao total de combinacoes entre angulos
-        self.num_states = self.num_states_vec[0];
+        self.num_states = self.num_states_vec[0]
         for i in range(7):
             self.num_states *= self.num_states_vec[i + 1]
 
         self.state_bins = [
-            np.linspace(-2.0857, 2.0857, self.num_states_0, endpoint=False)[1:],
-            np.linspace(-2.0857, 2.0857, self.num_states_1, endpoint=False)[1:],
-            np.linspace(-1.535889, 0.484090, self.num_states_2, endpoint=False)[1:],
-            np.linspace(-1.535889, 0.484090, self.num_states_3, endpoint=False)[1:],
-            np.linspace(-0.092346, 2.112528, self.num_states_4, endpoint=False)[1:],
-            np.linspace(-0.092346, 2.112528, self.num_states_5, endpoint=False)[1:],
-            np.linspace(-1.189516, 0.922747, self.num_states_6, endpoint=False)[1:],
-            np.linspace(-1.189516, 0.922747, self.num_states_7, endpoint=False)[1:],
-            np.linspace(-1.145303, 0.740810, self.num_states_8, endpoint=False)[1:]]
+            np.linspace(-2.0857, 2.0857, self.num_states_vec[0], endpoint=False)[1:],
+            np.linspace(-2.0857, 2.0857, self.num_states_vec[1], endpoint=False)[1:],
+            np.linspace(-1.535889, 0.484090, self.num_states_vec[2], endpoint=False)[1:],
+            np.linspace(-1.535889, 0.484090, self.num_states_vec[3], endpoint=False)[1:],
+            np.linspace(-0.092346, 2.112528, self.num_states_vec[4], endpoint=False)[1:],
+            np.linspace(-0.092346, 2.112528, self.num_states_vec[5], endpoint=False)[1:],
+            np.linspace(-1.189516, 0.922747, self.num_states_vec[6], endpoint=False)[1:],
+            np.linspace(-1.189516, 0.922747, self.num_states_vec[7], endpoint=False)[1:],
+            np.linspace(-1.145303, 0.740810, self.num_states_vec[8], endpoint=False)[1:]]
 
         self.q_table = np.full((self.num_states, self.num_actions), q_init)
         self.alpha = alpha  # learning rate
         self.gamma = gamma  # discount factor
         self.epsilon = epsilon  # epsilon-greedy rate
-
 
     def choose_action(self, state):
         if np.random.uniform() < self.epsilon:
@@ -96,34 +94,39 @@ class Agent(object):
             action = np.argmax(self.q_table[state])
         return action
 
-
     def do_action(self, action):
         angles = self.angles_lut[action]
         self.robot.set_joint_angles(angles)
         self.robot.proceed_simulation()
 
-
     def observe_state(self):
         angles = self.robot.get_joint_angles()
         return self.calc_state(angles)
 
-
     def calc_state(self, angles):
-        state_0 = np.digitize([angles[0]], self.state_bins[0])[0]
-        state_1 = np.digitize([angles[1]], self.state_bins[1])[0]
-        state = state_0 * self.num_states_1 + state_1
-        return state
+        state = np.digitize([angles[0]], self.state_bins[0])[0]
+        return state * self.num_states_vec[1] + self.recursao(angles, 1)
 
+    def recursao(self, angles, current):
+        state = np.digitize([angles[current]], self.state_bins[current])[0]
+        if current == 8:
+            return state
+        return state * self.num_states_vec[current+1] + self.recursao(angles, current+1)
 
     def play(self):
         action = self.choose_action(self.state)
         self.do_action(action)
 
         state_new = self.observe_state()
+        print 'New state: ', state_new
 
         position_new = self.robot.get_body_position()
         x_forward = position_new[0] - self.position[0]
-        reward = x_forward - 0.001
+        z_forward = position_new[2] - self.position[2]
+        reward = x_forward - 0.001 - z_forward
+
+        if position_new[2] < .3:
+            self.isDown = True
 
         # update Q-table
         self.update_q(self.state, action, reward, state_new)
@@ -131,12 +134,10 @@ class Agent(object):
         self.state = state_new
         self.position = position_new
 
-
     def update_q(self, state, action, reward, state_new):
         q_sa = self.q_table[state, action]
         td_error = reward + self.gamma * np.max(self.q_table[state_new]) - q_sa
         self.q_table[state, action] = q_sa + self.alpha * td_error
-
 
     def initialize_episode(self):
         self.robot.restart_simulation()
@@ -144,7 +145,8 @@ class Agent(object):
         self.position = self.robot.get_body_position()
         angles = self.robot.get_joint_angles()
         self.state = self.calc_state(angles)
-
+        print 'Initial state: ', self.state
+        self.isDown = False
 
     def plot(body_trajectory, joints_trajectory, return_history, q_table):
         fig = plt.figure(figsize=(9, 4))
@@ -204,7 +206,7 @@ if __name__ == '__main__':
     print "Ping time: %f" % (sec + msec / 1000.0)
 
     robot = Robot(client_id)
-    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.05, q_init=0.3)
+    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.2, q_init=0.3)
 
     num_episodes = 500
     len_episode = 100
@@ -215,6 +217,7 @@ if __name__ == '__main__':
 
             with contexttimer.Timer() as timer:
                 agent.initialize_episode()
+                time.sleep(.5)
                 body_trajectory = []
                 joints_trajectory = []
                 body_trajectory.append(robot.get_body_position())
@@ -227,11 +230,13 @@ if __name__ == '__main__':
                     body_trajectory.append(robot.get_body_position())
                     joints_trajectory.append(robot.get_joint_angles())
 
+                    if agent.isDown:
+                        break
+
             position = body_trajectory[-1]
             return_history.append(position[0])
             q_table = agent.q_table
 
-            plot(body_trajectory, joints_trajectory, return_history, q_table)
             print
             print "Body position: ", position
             print "Elapsed time (wall-clock): ", timer.elapsed
