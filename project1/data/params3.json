@@ -1,0 +1,7 @@
+{   "configuration4": {
+    "population_size": 10,
+    "reproduction_type": "none",
+    "mutation_probability": 0.8,
+    "selection_strategy": "steadyState"
+  }
+}
