@@ -53,12 +53,15 @@ class Agent(object):
 
         # TODO Eita, nao sei o que isso faz nao...
         # look-up table from action to angles
-        self.angles_lut = np.array(np.meshgrid(self.angles_0, self.angles_1,
-                                               self.angles_2,
-                                               self.angles_3,
-                                               self.angles_4,
-                                               self.angles_5, self.angles_6, self.angles_7, self.angles_8,
-                                               indexing='ij')).reshape(9, -1).T
+        # self.angles_lut = np.array(np.meshgrid(self.angles_0, self.angles_1,
+        #                                        self.angles_2,
+        #                                        self.angles_3,
+        #                                        self.angles_4,
+        #                                        self.angles_5, self.angles_6, self.angles_7, self.angles_8,
+        #                                        indexing='ij')).reshape(9, -1).T
+
+        self.angles_lut = np.genfromtxt('foo.csv', delimiter=',')
+        self.num_actions = len(self.angles_lut)
 
         # O numero de estados pode ser diferente do numero de acoes porque
         # estamos usando o metodo simxSetTargetPosition, que se nao conseguir
@@ -71,16 +74,20 @@ class Agent(object):
         for i in range(7):
             self.num_states *= self.num_states_vec[i + 1]
 
-        self.state_bins = [
-            np.linspace(-2.0857, 2.0857, self.num_states_vec[0], endpoint=False)[1:],
-            np.linspace(-2.0857, 2.0857, self.num_states_vec[1], endpoint=False)[1:],
-            np.linspace(-1.535889, 0.484090, self.num_states_vec[2], endpoint=False)[1:],
-            np.linspace(-1.535889, 0.484090, self.num_states_vec[3], endpoint=False)[1:],
-            np.linspace(-0.092346, 2.112528, self.num_states_vec[4], endpoint=False)[1:],
-            np.linspace(-0.092346, 2.112528, self.num_states_vec[5], endpoint=False)[1:],
-            np.linspace(-1.189516, 0.922747, self.num_states_vec[6], endpoint=False)[1:],
-            np.linspace(-1.189516, 0.922747, self.num_states_vec[7], endpoint=False)[1:],
-            np.linspace(-1.145303, 0.740810, self.num_states_vec[8], endpoint=False)[1:]]
+        # self.state_bins = [
+        #     np.linspace(-2.0857, 2.0857, self.num_states_vec[0], endpoint=False)[1:],
+        #     np.linspace(-2.0857, 2.0857, self.num_states_vec[1], endpoint=False)[1:],
+        #     np.linspace(-1.535889, 0.484090, self.num_states_vec[2], endpoint=False)[1:],
+        #     np.linspace(-1.535889, 0.484090, self.num_states_vec[3], endpoint=False)[1:],
+        #     np.linspace(-0.092346, 2.112528, self.num_states_vec[4], endpoint=False)[1:],
+        #     np.linspace(-0.092346, 2.112528, self.num_states_vec[5], endpoint=False)[1:],
+        #     np.linspace(-1.189516, 0.922747, self.num_states_vec[6], endpoint=False)[1:],
+        #     np.linspace(-1.189516, 0.922747, self.num_states_vec[7], endpoint=False)[1:],
+        #     np.linspace(-1.145303, 0.740810, self.num_states_vec[8], endpoint=False)[1:]]
+
+        self.state_bins = self.angles_lut.T
+        for i in range(len(self.state_bins)):
+            self.state_bins[i].sort()
 
         self.q_table = np.full((self.num_states, self.num_actions), q_init)
         self.alpha = alpha  # learning rate
@@ -251,5 +258,7 @@ if __name__ == '__main__':
     plt.xlabel('episode')
     plt.ylabel('position [m]')
     plt.show()
+
+    np.savetxt('qtable.csv', q_table, delimiter=',')
 
     e = vrep.simxStopSimulation(client_id, vrep.simx_opmode_oneshot_wait)
