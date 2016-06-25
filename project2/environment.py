@@ -33,29 +33,29 @@ class Robot(object):
 
     def configure_handles(self):
         # Handles of body and joints
-        rc, body = vrep.simxGetObjectHandle(self.client_id, 'nao', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
+        rc, body = vrep.simxGetObjectHandle(self.client_id, 'NAO', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
 
-		rc, joint_0 = vrep.simxGetObjectHandle(self.client_id, 'LShoulderPitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
-		rc, joint_1 = vrep.simxGetObjectHandle(self.client_id, 'RShoulderPitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
+        rc, joint_0 = vrep.simxGetObjectHandle(self.client_id, 'LShoulderPitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
+        rc, joint_1 = vrep.simxGetObjectHandle(self.client_id, 'RShoulderPitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
 
-		rc, joint_2 = vrep.simxGetObjectHandle(self.client_id, 'LHipPitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
-		rc, joint_3 = vrep.simxGetObjectHandle(self.client_id, 'RHipPitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
-		rc, joint_4 = vrep.simxGetObjectHandle(self.client_id, 'LKneePitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
-		rc, joint_5 = vrep.simxGetObjectHandle(self.client_id, 'RKneePitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
-		rc, joint_6 = vrep.simxGetObjectHandle(self.client_id, 'LAnklePitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
-		rc, joint_7 = vrep.simxGetObjectHandle(self.client_id, 'RAnklePitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
+        rc, joint_2 = vrep.simxGetObjectHandle(self.client_id, 'LHipPitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
+        rc, joint_3 = vrep.simxGetObjectHandle(self.client_id, 'RHipPitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
+        rc, joint_4 = vrep.simxGetObjectHandle(self.client_id, 'LKneePitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
+        rc, joint_5 = vrep.simxGetObjectHandle(self.client_id, 'RKneePitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
+        rc, joint_6 = vrep.simxGetObjectHandle(self.client_id, 'LAnklePitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
+        rc, joint_7 = vrep.simxGetObjectHandle(self.client_id, 'RAnklePitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
 
-		rc, joint_8 = vrep.simxGetObjectHandle(self.client_id, 'LHipYawPitch', vrep.simx_opmode_oneshot_wait)
-		assert rc == 0, rc
+        rc, joint_8 = vrep.simxGetObjectHandle(self.client_id, 'LHipYawPitch3', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
 
         self.body = body
         self.joints = [joint_0, joint_1, joint_2, joint_3, joint_4, joint_5, joint_6, joint_7, joint_8]
