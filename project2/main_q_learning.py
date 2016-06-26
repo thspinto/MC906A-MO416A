@@ -13,43 +13,43 @@ from environment import Robot
 
 class Agent(object):
     def __init__(self, robot, alpha=0.1, gamma=0.9, epsilon=0.05, q_init=1):
-        self.robot = robot  # TODO definir discretizacao
-        # Quantidade de angulos após discretizacao para cada junta
-        self.num_actions_vec = [
-            3,
-            3,
-            3,
-            3,
-            3,
-            3,
-            3,
-            3,
-            3
-        ]
-
-        # Total de acoes eh igual ao total de combinacoes entre angulos
-        self.num_actions = self.num_actions_vec[0]
-        for i in range(1, 8):
-            self.num_actions *= self.num_actions_vec[i]
-
-        # TODO validar (http://doc.aldebaran.com/1-14/family/nao_h25/joints_h25.html)
-        # Intervalos para serem discretizados
-
-        #braços
-        self.angles_0 = np.linspace(1, 2, self.num_actions_vec[0])
-        self.angles_1 = np.linspace(1, 2, self.num_actions_vec[1])
-
-        #quadril
-        self.angles_2 = np.linspace(-.5, .5, self.num_actions_vec[2])
-        self.angles_3 = np.linspace(-.5, .5, self.num_actions_vec[3])
-
-        self.angles_4 = np.linspace(0, .5, self.num_actions_vec[4])
-        self.angles_5 = np.linspace(0, .5, self.num_actions_vec[5])
-        self.angles_6 = np.linspace(-.5, 0, self.num_actions_vec[6])
-        self.angles_7 = np.linspace(-.5, 0, self.num_actions_vec[7])
-        self.angles_8 = np.linspace(-.1, 0.1, self.num_actions_vec[8])
-
-        # TODO Eita, nao sei o que isso faz nao...
+        self.robot = robot
+        # # Quantidade de angulos após discretizacao para cada junta
+        # self.num_actions_vec = [
+        #     3,
+        #     3,
+        #     3,
+        #     3,
+        #     3,
+        #     3,
+        #     3,
+        #     3,
+        #     3
+        # ]
+        #
+        # # Total de acoes eh igual ao total de combinacoes entre angulos
+        # self.num_actions = self.num_actions_vec[0]
+        # for i in range(1, 8):
+        #     self.num_actions *= self.num_actions_vec[i]
+        #
+        # # TODO validar (http://doc.aldebaran.com/1-14/family/nao_h25/joints_h25.html)
+        # # Intervalos para serem discretizados
+        #
+        # #braços
+        # self.angles_0 = np.linspace(1, 2, self.num_actions_vec[0])
+        # self.angles_1 = np.linspace(1, 2, self.num_actions_vec[1])
+        #
+        # #quadril
+        # self.angles_2 = np.linspace(-.5, .5, self.num_actions_vec[2])
+        # self.angles_3 = np.linspace(-.5, .5, self.num_actions_vec[3])
+        #
+        # self.angles_4 = np.linspace(0, .5, self.num_actions_vec[4])
+        # self.angles_5 = np.linspace(0, .5, self.num_actions_vec[5])
+        # self.angles_6 = np.linspace(-.5, 0, self.num_actions_vec[6])
+        # self.angles_7 = np.linspace(-.5, 0, self.num_actions_vec[7])
+        # self.angles_8 = np.linspace(-.1, 0.1, self.num_actions_vec[8])
+        #
+        # # TODO Eita, nao sei o que isso faz nao...
         # look-up table from action to angles
         # self.angles_lut = np.array(np.meshgrid(self.angles_0, self.angles_1,
         #                                        self.angles_2,
@@ -61,33 +61,46 @@ class Agent(object):
         self.angles_lut = np.genfromtxt('foo.csv', delimiter=',')
         self.num_actions = len(self.angles_lut)
 
+        # self.state_bins = self.angles_lut.T
+        # for i in range(len(self.state_bins)):
+        #     self.state_bins[i].sort()
+
         # O numero de estados pode ser diferente do numero de acoes porque
         # estamos usando o metodo simxSetTargetPosition, que se nao conseguir
         # ir ate o angulo desejado para no meio do caminho. Nao sei se eh
         # importante no nosso caso
-        self.num_states_vec = self.num_actions_vec[:]
+        self.num_states_vec = [
+            5,
+            5,
+            5,
+            5,
+            10,
+            10,
+            10,
+            10,
+            10
+        ]
 
-        # Total de acoes eh igual ao total de combinacoes entre angulos
+        angles = self.angles_lut.T
+
+        # Total de estados eh igual ao total de combinacoes entre angulos
         self.num_states = self.num_states_vec[0]
         for i in range(7):
             self.num_states *= self.num_states_vec[i + 1]
 
-        # self.state_bins = [
-        #     np.linspace(-2.0857, 2.0857, self.num_states_vec[0], endpoint=False)[1:],
-        #     np.linspace(-2.0857, 2.0857, self.num_states_vec[1], endpoint=False)[1:],
-        #     np.linspace(-1.535889, 0.484090, self.num_states_vec[2], endpoint=False)[1:],
-        #     np.linspace(-1.535889, 0.484090, self.num_states_vec[3], endpoint=False)[1:],
-        #     np.linspace(-0.092346, 2.112528, self.num_states_vec[4], endpoint=False)[1:],
-        #     np.linspace(-0.092346, 2.112528, self.num_states_vec[5], endpoint=False)[1:],
-        #     np.linspace(-1.189516, 0.922747, self.num_states_vec[6], endpoint=False)[1:],
-        #     np.linspace(-1.189516, 0.922747, self.num_states_vec[7], endpoint=False)[1:],
-        #     np.linspace(-1.145303, 0.740810, self.num_states_vec[8], endpoint=False)[1:]]
-
-        self.state_bins = self.angles_lut.T
-        for i in range(len(self.state_bins)):
-            self.state_bins[i].sort()
+        self.state_bins = [
+            np.linspace(min(angles[0]), max(angles[0]), self.num_states_vec[0], endpoint=False)[1:],
+            np.linspace(min(angles[1]), max(angles[1]), self.num_states_vec[1], endpoint=False)[1:],
+            np.linspace(min(angles[2]), max(angles[2]), self.num_states_vec[2], endpoint=False)[1:],
+            np.linspace(min(angles[3]), max(angles[3]), self.num_states_vec[3], endpoint=False)[1:],
+            np.linspace(min(angles[4]), max(angles[4]), self.num_states_vec[4], endpoint=False)[1:],
+            np.linspace(min(angles[5]), max(angles[5]), self.num_states_vec[5], endpoint=False)[1:],
+            np.linspace(min(angles[6]), max(angles[6]), self.num_states_vec[6], endpoint=False)[1:],
+            np.linspace(min(angles[7]), max(angles[7]), self.num_states_vec[7], endpoint=False)[1:],
+            np.linspace(-min(angles[8]), max(angles[8]), self.num_states_vec[8], endpoint=False)[1:]]
 
         self.q_table = np.full((self.num_states, self.num_actions), q_init)
+        #self.q_table = np.genfromtxt('qtable.csv', delimiter=',')
         self.alpha = alpha  # learning rate
         self.gamma = gamma  # discount factor
         self.epsilon = epsilon  # epsilon-greedy rate
@@ -211,10 +224,10 @@ if __name__ == '__main__':
     print "Ping time: %f" % (sec + msec / 1000.0)
 
     robot = Robot(client_id)
-    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.2, q_init=0.3)
+    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.6, q_init=0.3)
 
-    num_episodes = 500
-    len_episode = 100
+    num_episodes = 50
+    len_episode = 200
     return_history = []
     try:
         for episode in range(num_episodes):
@@ -240,7 +253,6 @@ if __name__ == '__main__':
 
             position = body_trajectory[-1]
             return_history.append(position[0])
-            q_table = agent.q_table
 
             print
             print "Body position: ", position
@@ -250,13 +262,12 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print "Terminated by `Ctrl+c` !!!!!!!!!!"
 
+    np.savetxt('qtable.csv', agent.q_table, delimiter=',')
     plt.grid()
     plt.plot(return_history)
     plt.title('Return (total reward in a episode)')
     plt.xlabel('episode')
     plt.ylabel('position [m]')
     plt.show()
-
-    np.savetxt('qtable.csv', q_table, delimiter=',')
 
     e = vrep.simxStopSimulation(client_id, vrep.simx_opmode_oneshot_wait)
