@@ -70,15 +70,15 @@ class Agent(object):
         # ir ate o angulo desejado para no meio do caminho. Nao sei se eh
         # importante no nosso caso
         self.num_states_vec = [
-            5,
-            5,
-            5,
-            5,
-            10,
-            10,
-            10,
-            10,
-            10
+            3,
+            3,
+            4,
+            4,
+            8,
+            8,
+            8,
+            8,
+            4
         ]
 
         angles = self.angles_lut.T
@@ -99,8 +99,8 @@ class Agent(object):
             np.linspace(min(angles[7]), max(angles[7]), self.num_states_vec[7], endpoint=False)[1:],
             np.linspace(-min(angles[8]), max(angles[8]), self.num_states_vec[8], endpoint=False)[1:]]
 
-        #self.q_table = np.full((self.num_states, self.num_actions), q_init)
-        self.q_table = np.genfromtxt('qtable.csv', delimiter=',')
+        self.q_table = np.full((self.num_states, self.num_actions), q_init)
+        #self.q_table = np.genfromtxt('qtable.csv', delimiter=',')
         self.alpha = alpha  # learning rate
         self.gamma = gamma  # discount factor
         self.epsilon = epsilon  # epsilon-greedy rate
@@ -224,10 +224,10 @@ if __name__ == '__main__':
     print "Ping time: %f" % (sec + msec / 1000.0)
 
     robot = Robot(client_id)
-    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0, q_init=100000)
+    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.1, q_init=100000)
 
     num_episodes = 50
-    len_episode = 200
+    len_episode = 500
     return_history = []
     try:
         for episode in range(num_episodes):
