@@ -206,50 +206,23 @@ if __name__ == '__main__':
     print "Ping time: %f" % (sec + msec / 1000.0)
 
     robot = Robot(client_id)
-    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.2, q_init=0.3)
-
-    num_episodes = 500
-    len_episode = 100
-    return_history = []
+    a = []
+    last = []
     try:
-        for episode in range(num_episodes):
-            print "start simulation # %d" % episode
-
-            with contexttimer.Timer() as timer:
-                agent.initialize_episode()
-                time.sleep(.5)
-                body_trajectory = []
-                joints_trajectory = []
-                body_trajectory.append(robot.get_body_position())
-                joints_trajectory.append(robot.get_joint_angles())
-
-                for t in range(len_episode):
-                    agent.play()
-                    print agent.state,
-
-                    body_trajectory.append(robot.get_body_position())
-                    joints_trajectory.append(robot.get_joint_angles())
-
-                    if agent.isDown:
-                        break
-
-            position = body_trajectory[-1]
-            return_history.append(position[0])
-            q_table = agent.q_table
-
-            print
-            print "Body position: ", position
-            print "Elapsed time (wall-clock): ", timer.elapsed
-            print
-
+        while True:
+            current = robot.get_joint_angles()
+            equal = True
+            for i in range(9):
+                if len(last) != len(current):
+                    equal = False
+                    break
+                if last[i] != current[i]:
+                    equal = False
+                    break
+            if not equal:
+                a.append(current)
+            last = current
     except KeyboardInterrupt:
-        print "Terminated by `Ctrl+c` !!!!!!!!!!"
-
-    plt.grid()
-    plt.plot(return_history)
-    plt.title('Return (total reward in a episode)')
-    plt.xlabel('episode')
-    plt.ylabel('position [m]')
-    plt.show()
-
-    e = vrep.simxStopSimulation(client_id, vrep.simx_opmode_oneshot_wait)
+        a = np.asarray(a)
+        print len(a)
+        np.savetxt("foo.csv", a, delimiter=",")
