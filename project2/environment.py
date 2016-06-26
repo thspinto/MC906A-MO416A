@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Aug 10 12:47:16 2015
-
-@author: ryuhei
+Based on: https://github.com/ronekko/basic_reinforcement_learning
 """
 
 import time
