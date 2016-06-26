@@ -58,7 +58,7 @@ class Agent(object):
         #                                        self.angles_5, self.angles_6, self.angles_7, self.angles_8,
         #                                        indexing='ij')).reshape(9, -1).T
 
-        self.angles_lut = np.genfromtxt('foo.csv', delimiter=',')
+        self.angles_lut = np.genfromtxt('foo.csv', delimiter=',', dtype=float)
         self.num_actions = len(self.angles_lut)
 
         # self.state_bins = self.angles_lut.T
@@ -70,15 +70,15 @@ class Agent(object):
         # ir ate o angulo desejado para no meio do caminho. Nao sei se eh
         # importante no nosso caso
         self.num_states_vec = [
-            3,
-            3,
-            4,
-            4,
+            5,
+            5,
+            6,
+            6,
             8,
             8,
             8,
             8,
-            4
+            6
         ]
 
         angles = self.angles_lut.T
@@ -97,7 +97,7 @@ class Agent(object):
             np.linspace(min(angles[5]), max(angles[5]), self.num_states_vec[5], endpoint=False)[1:],
             np.linspace(min(angles[6]), max(angles[6]), self.num_states_vec[6], endpoint=False)[1:],
             np.linspace(min(angles[7]), max(angles[7]), self.num_states_vec[7], endpoint=False)[1:],
-            np.linspace(-min(angles[8]), max(angles[8]), self.num_states_vec[8], endpoint=False)[1:]]
+            np.linspace(min(angles[8]), max(angles[8]), self.num_states_vec[8], endpoint=False)[1:]]
 
         self.q_table = np.full((self.num_states, self.num_actions), q_init)
         #self.q_table = np.genfromtxt('qtable.csv', delimiter=',')
@@ -224,7 +224,7 @@ if __name__ == '__main__':
     print "Ping time: %f" % (sec + msec / 1000.0)
 
     robot = Robot(client_id)
-    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.1, q_init=100000)
+    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.01, q_init=100000)
 
     num_episodes = 50
     len_episode = 500
