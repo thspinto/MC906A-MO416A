@@ -115,7 +115,7 @@ class Agent(object):
     def do_action(self, action):
         angles = self.angles_lut[action]
         self.robot.set_joint_angles(angles)
-        self.robot.proceed_simulation()
+        self.robot.proceed_simulation(10)
 
     def observe_state(self):
         angles = self.robot.get_joint_angles()
@@ -136,14 +136,12 @@ class Agent(object):
         self.do_action(action)
 
         state_new = self.observe_state()
-        print 'New state: ', state_new
 
-        position_new = self.robot.get_body_position()
-        x_forward = position_new[0] - self.position[0]
-        z_forward = position_new[2] - self.position[2]
-        reward = x_forward - 0.001 - z_forward
+        position_new = self.robot.get_vase_relative_position()
+        z_forward = self.robot.get_body_position()[2] - self.position[2]
+        reward = - position_new[0] - position_new[1] - 0.001 - z_forward
 
-        if position_new[2] < .3:
+        if self.robot.get_body_position()[2] < .3:
             self.isDown = True
 
         # update Q-table
@@ -227,7 +225,7 @@ if __name__ == '__main__':
     agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.01, q_init=100000)
 
     num_episodes = 50
-    len_episode = 500
+    len_episode = 100
     return_history = []
     try:
         for episode in range(num_episodes):
@@ -243,7 +241,6 @@ if __name__ == '__main__':
 
                 for t in range(len_episode):
                     agent.play()
-                    print agent.state,
 
                     body_trajectory.append(robot.get_body_position())
                     joints_trajectory.append(robot.get_joint_angles())

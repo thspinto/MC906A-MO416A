@@ -55,10 +55,14 @@ class Robot(object):
         rc, joint_8 = vrep.simxGetObjectHandle(self.client_id, 'LHipYawPitch3', vrep.simx_opmode_oneshot_wait)
         assert rc == 0, rc
 
+        rc, self.vase = vrep.simxGetObjectHandle(self.client_id, 'indoorPlant', vrep.simx_opmode_oneshot_wait)
+        assert rc == 0, rc
+
         self.body = body
         self.joints = [joint_0, joint_1, joint_2, joint_3, joint_4, joint_5, joint_6, joint_7, joint_8]
         self.get_body_position(initial=True)
         self.get_joint_angles(initial=True)
+        vrep.simxGetObjectPosition(self.client_id, self.body, self.vase, vrep.simx_opmode_streaming)
         time.sleep(0.5)
 
     def get_body_position(self, initial=False):
@@ -70,6 +74,12 @@ class Robot(object):
             self.client_id, self.body, -1, mode)
         assert rc == (1 if initial else 0), rc
         return np.array(body_position)
+
+    def get_vase_relative_position(self):
+        rc, body_relative_position = \
+            vrep.simxGetObjectPosition(self.client_id, self.body, self.vase, vrep.simx_opmode_buffer)
+        assert rc == 0, rc
+        return np.array(body_relative_position)
 
     def get_joint_angles(self, initial=False):
         if initial:
@@ -91,7 +101,7 @@ class Robot(object):
 
     def initialize_pose(self):
         self.set_joint_angles([2, 2, 0, 0, 0, 0, 0, 0, 0])
-        self.proceed_simulation(10)
+        self.proceed_simulation(20)
 
 
 if __name__ == '__main__':
