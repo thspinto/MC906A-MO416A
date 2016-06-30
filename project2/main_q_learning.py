@@ -14,56 +14,8 @@ from environment import Robot
 class Agent(object):
     def __init__(self, robot, alpha=0.1, gamma=0.9, epsilon=0.05, q_init=1):
         self.robot = robot
-        # # Quantidade de angulos após discretizacao para cada junta
-        # self.num_actions_vec = [
-        #     3,
-        #     3,
-        #     3,
-        #     3,
-        #     3,
-        #     3,
-        #     3,
-        #     3,
-        #     3
-        # ]
-        #
-        # # Total de acoes eh igual ao total de combinacoes entre angulos
-        # self.num_actions = self.num_actions_vec[0]
-        # for i in range(1, 8):
-        #     self.num_actions *= self.num_actions_vec[i]
-        #
-        # # TODO validar (http://doc.aldebaran.com/1-14/family/nao_h25/joints_h25.html)
-        # # Intervalos para serem discretizados
-        #
-        # #braços
-        # self.angles_0 = np.linspace(1, 2, self.num_actions_vec[0])
-        # self.angles_1 = np.linspace(1, 2, self.num_actions_vec[1])
-        #
-        # #quadril
-        # self.angles_2 = np.linspace(-.5, .5, self.num_actions_vec[2])
-        # self.angles_3 = np.linspace(-.5, .5, self.num_actions_vec[3])
-        #
-        # self.angles_4 = np.linspace(0, .5, self.num_actions_vec[4])
-        # self.angles_5 = np.linspace(0, .5, self.num_actions_vec[5])
-        # self.angles_6 = np.linspace(-.5, 0, self.num_actions_vec[6])
-        # self.angles_7 = np.linspace(-.5, 0, self.num_actions_vec[7])
-        # self.angles_8 = np.linspace(-.1, 0.1, self.num_actions_vec[8])
-        #
-        # # TODO Eita, nao sei o que isso faz nao...
-        # look-up table from action to angles
-        # self.angles_lut = np.array(np.meshgrid(self.angles_0, self.angles_1,
-        #                                        self.angles_2,
-        #                                        self.angles_3,
-        #                                        self.angles_4,
-        #                                        self.angles_5, self.angles_6, self.angles_7, self.angles_8,
-        #                                        indexing='ij')).reshape(9, -1).T
-
-        self.angles_lut = np.genfromtxt('foo.csv', delimiter=',', dtype=float)
+        self.angles_lut = np.genfromtxt('foo2.csv', delimiter=',', dtype=float)
         self.num_actions = len(self.angles_lut)
-
-        # self.state_bins = self.angles_lut.T
-        # for i in range(len(self.state_bins)):
-        #     self.state_bins[i].sort()
 
         # O numero de estados pode ser diferente do numero de acoes porque
         # estamos usando o metodo simxSetTargetPosition, que se nao conseguir
@@ -105,6 +57,7 @@ class Agent(object):
         self.gamma = gamma  # discount factor
         self.epsilon = epsilon  # epsilon-greedy rate
 
+
     def choose_action(self, state):
         if np.random.uniform() < self.epsilon:
             action = np.random.choice(self.num_actions)
@@ -115,7 +68,7 @@ class Agent(object):
     def do_action(self, action):
         angles = self.angles_lut[action]
         self.robot.set_joint_angles(angles)
-        self.robot.proceed_simulation(10)
+        self.robot.proceed_simulation(8)
 
     def observe_state(self):
         angles = self.robot.get_joint_angles()
@@ -139,7 +92,10 @@ class Agent(object):
 
         position_new = self.robot.get_vase_relative_position()
         z_forward = self.robot.get_body_position()[2] - self.position[2]
-        reward = - position_new[0] - position_new[1] - 0.001 - z_forward
+        delta_x = self.position[0] - position_new[0]
+        delta_y = self.position[1] - position_new[1]
+
+        reward = delta_x + delta_y - 0.001 - z_forward
 
         if self.robot.get_body_position()[2] < .3:
             self.isDown = True
@@ -164,7 +120,7 @@ class Agent(object):
         print 'Initial state: ', self.state
         self.isDown = False
 
-    def plot(body_trajectory, joints_trajectory, return_history, q_table):
+    def plot(self, body_trajectory, joints_trajectory, return_history, q_table):
         fig = plt.figure(figsize=(9, 4))
         T = len(body_trajectory)
 
@@ -222,10 +178,10 @@ if __name__ == '__main__':
     print "Ping time: %f" % (sec + msec / 1000.0)
 
     robot = Robot(client_id)
-    agent = Agent(robot, alpha=0.1, gamma=0.9, epsilon=0.01, q_init=100000)
+    agent = Agent(robot, alpha=0.5, gamma=0.9, epsilon=0.9, q_init=0)
 
-    num_episodes = 50
-    len_episode = 100
+    num_episodes = 10
+    len_episode = 200
     return_history = []
     try:
         for episode in range(num_episodes):
@@ -251,6 +207,9 @@ if __name__ == '__main__':
             position = body_trajectory[-1]
             return_history.append(position[0])
 
+            if agent.epsilon > 0.1:
+                agent.epsilon -= 0.05
+
             print
             print "Body position: ", position
             print "Elapsed time (wall-clock): ", timer.elapsed
@@ -259,12 +218,21 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print "Terminated by `Ctrl+c` !!!!!!!!!!"
 
-    np.savetxt('qtable.csv', agent.q_table, delimiter=',')
     plt.grid()
     plt.plot(return_history)
     plt.title('Return (total reward in a episode)')
     plt.xlabel('episode')
     plt.ylabel('position [m]')
+    plt.show()
+
+    T = len(body_trajectory)
+
+    # plot an xyz trajectory of the body
+    plt.grid()
+    plt.plot(np.arange(T) * 0.05, np.array(body_trajectory))
+    plt.title('Position of the body')
+    plt.ylabel('position [m]')
+    plt.legend(['x', 'y', 'z'], loc='best')
     plt.show()
 
     e = vrep.simxStopSimulation(client_id, vrep.simx_opmode_oneshot_wait)

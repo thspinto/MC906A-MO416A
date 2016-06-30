@@ -101,7 +101,7 @@ class Robot(object):
 
     def initialize_pose(self):
         self.set_joint_angles([2, 2, 0, 0, 0, 0, 0, 0, 0])
-        self.proceed_simulation(20)
+        self.proceed_simulation(30)
 
 
 if __name__ == '__main__':
